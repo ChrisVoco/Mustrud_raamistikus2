@@ -65,6 +65,41 @@ app.get('/article/:slug', (req, res) => {
     });
 });
 
+
+app.get('/author/:author_id', (req, res) => {
+    const authorId = req.params.author_id;
+
+    // Leiame autori
+    const authorQuery = 'SELECT * FROM author WHERE id = ?';
+
+    con.query(authorQuery, [authorId], (err, authorResult) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Andmebaasi viga');
+        }
+
+        if (authorResult.length === 0) {
+            return res.status(404).send('Autorit ei leitud');
+        }
+
+        // Leiame selle autori artiklid
+        const articlesQuery = 'SELECT * FROM article WHERE author_id = ?';
+
+        con.query(articlesQuery, [authorId], (err, articlesResult) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).send('Andmebaasi viga');
+            }
+
+            res.render('author', {
+                author: authorResult[0],
+                articles: articlesResult
+            });
+        });
+    });
+});
+
+
 app.listen(3003, () => {
     console.log('App is started at http://localhost:3003')
 })
