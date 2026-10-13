@@ -42,15 +42,26 @@ app.get('/', (req, res) => {
 });
 
 app.get('/article/:slug', (req, res) => {
-    let query = `SELECT * FROM article WHERE slug='${req.params.slug}`
-    let article
-    con.query(query, (err, result) => {
-            if (err) throw err;
-            article = result
-            console.log(article)
-            res.render('article', {
-                article: article
-        })
+    const query = `
+        SELECT article.*, author.name AS author_name
+        FROM article
+        LEFT JOIN author ON article.author_id = author.id
+        WHERE article.slug = ?
+    `;
+
+    con.query(query, [req.params.slug], (err, result) => {
+        if (err) {
+            console.error(err);
+            return res.status(500).send('Andmebaasi viga');
+        }
+
+        if (result.length === 0) {
+            return res.status(404).send('Article not found');
+        }
+
+        res.render('article', {
+            article: result[0]
+        });
     });
 });
 
